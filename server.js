@@ -72,16 +72,16 @@ app.post('/signup', async (req, res) => {
 
         db.query('INSERT INTO users (name, email, password) VALUES (?, ?, ?)', [name, email, hashedPassword], (err, result) => {
             if (err) {
-                return res.status(500).json({ error: 'Erro ao cadastrar usuário' })
+                console.log(err)
+                return res.status(500).json({ error: err.message })
             }
 
-            jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-                expiresIn: '1d',
-            })
+            const token = jwt.sign({ id: result.insertId }, process.env.JWT_SECRET || 'SECRET', { expiresIn: '1d' })
 
             res.json({ token })
         })
     } catch (error) {
+        console.log(error)
         res.status(500).json({ error: 'Erro no servidor' })
     }
 })
