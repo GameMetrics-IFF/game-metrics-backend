@@ -11,18 +11,21 @@ app.use(cors())
 app.use(express.json())
 
 // Conexão com MySQL
-const db = mysql.createConnection({
-    host: process.env.MYSQLHOST,
-    user: process.env.MYSQLUSER,
-    password: process.env.MYSQLPASSWORD,
-    database: process.env.MYSQLDATABASE,
-})
+const db = mysql.createConnection(process.env.MYSQL_URL)
 
 db.connect((err) => {
     if (err) {
         console.log('Erro ao conectar:', err)
     } else {
         console.log('Conectado ao MySQL!')
+
+        db.query(`USE ${process.env.MYSQLDATABASE}`, (err) => {
+            if (err) {
+                console.log('Erro ao selecionar banco:', err)
+            } else {
+                console.log('Banco selecionado!')
+            }
+        })
     }
 })
 
@@ -73,7 +76,7 @@ app.post('/signup', async (req, res) => {
         db.query('INSERT INTO users (name, email, password) VALUES (?, ?, ?)', [name, email, hashedPassword], (err, result) => {
             if (err) {
                 console.log(err)
-                return res.status(500).json({ error: err.message })
+                return res.status(500).json({ error: 'Erro ao cadastrar usuário' })
             }
 
             const token = jwt.sign({ id: result.insertId }, process.env.JWT_SECRET || 'SECRET', { expiresIn: '1d' })
